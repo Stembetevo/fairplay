@@ -9,3 +9,23 @@ body {
     background-color: #410a99;
     color: #fff;
 }
+
+header{
+    background-color: #333;
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+    
+}
+
+h1{
+    font-size: 36px;
+    text-align: center;
+    margin: 10px auto;
+    color: aqua;
+}
+
+h2{
+    text-align: center;
+    margin: 5px auto;
+}
