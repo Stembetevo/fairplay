@@ -1,11 +1,40 @@
-Capstone Project – Part 1: Project Idea & Planning Document
-1. Project Title
-FairPlay – A Football Team Generator Web App
+# FairPlay – A Football Team Generator Web App
 
-2. Project Idea
-When organizing casual football matches with friends, team selection is usually stressful. Often, one team ends up too strong, or many players share the same position, leading to unbalanced teams and a less enjoyable game.
-FairPlay solves this by allowing players to register their details (name, skill level, preferred position, availability), and then automatically generating balanced teams based on defined criteria.
-This ensures fair play, reduced arguments, and a smoother match setup experience.
+## 🎯 Project Overview
+FairPlay is a Django-based web application that solves the common problem of creating balanced teams for casual football matches. Instead of dealing with arguments and unfair team selections, FairPlay automatically generates balanced teams based on player skill levels and positions.
+
+## 🚀 What I'm Building
+A web application that allows users to:
+- Register players with their name, position, and skill rating (1-5)
+- Automatically generate balanced teams based on skill distribution
+- View team compositions with fair position assignments
+- Manage players and create multiple match sessions
+
+## 📊 Current Progress
+
+### ✅ Completed Features
+1. **Project Setup**
+   - Django project structure initialized
+   - Database models created (Player, Team, Match)
+   - Initial migrations completed
+
+2. **Player Management System**
+   - Player model with fields: name, position (Striker/Defender/Midfielder/Goalkeeper), rating (1-5)
+   - Player creation form with Django ModelForm
+   - Add player functionality with form validation
+   - Player list view to display all registered players
+   - Bootstrap-styled UI for player forms
+
+3. **User Interface**
+   - Clean, centered landing page with "Continue" button
+   - Responsive design using Bootstrap 5
+   - Player addition page with form styling
+   - Player list page with table display
+
+### 🔨 Currently Working On
+- Team generation algorithm
+- Match session management
+- Balancing logic based on ratings and positions
 
 3. Main Features
 1. Player Management
@@ -182,47 +211,64 @@ position_assigned
 varchar
 
 
-7. Project Development Timeline
-Week 1: Planning & Setup
-Finalize idea and features
+## 🔮 Future Developments
 
+### Phase 1: Core Team Generation (Next Steps)
+- [ ] Implement team balancing algorithm
+- [ ] Create match session management
+- [ ] Build team display page
+- [ ] Add ability to shuffle/regenerate teams
 
-Create Django project
+### Phase 2: Enhanced Features
+- [ ] Player availability tracking
+- [ ] Match history tracking
+- [ ] Edit/delete player functionality
+- [ ] Team statistics (average rating per team)
+- [ ] Export teams to PDF or share via link
 
+### Phase 3: Advanced Features
+- [ ] User authentication system
+- [ ] Save multiple match configurations
+- [ ] Player performance tracking
+- [ ] Email notifications for match assignments
+- [ ] Mobile-responsive optimization
+- [ ] Dark mode toggle
 
-Build players app
+## 🛠️ Tech Stack
+- **Backend**: Django 4.2
+- **Frontend**: HTML, CSS, Bootstrap 5
+- **Database**: SQLite (development)
+- **Python Version**: 3.x
 
+## 📁 Project Structure
+```
+fairplay/
+├── fair_play/              # Main app
+│   ├── models.py          # Player, Team, Match models
+│   ├── forms.py           # PlayerCreationForm
+│   ├── views.py           # CreatePlayerView, PlayerListView
+│   ├── urls.py            # App URL configurations
+│   └── templates/         # HTML templates
+│       ├── index.html     # Landing page
+│       ├── playeradd.html # Add player form
+│       └── playerslist.html # List all players
+├── fairplay/              # Project settings
+│   ├── settings.py
+│   └── urls.py
+└── manage.py
+```
 
-Implement player model and CRUD views
+## 🚦 Getting Started
+1. Clone the repository
+2. Install dependencies: `pip install django`
+3. Run migrations: `python manage.py migrate`
+4. Start server: `python manage.py runserver`
+5. Visit: `http://127.0.0.1:8000/`
 
-
-Week 2: Match & Team Logic
-Create matches app
-
-
-Implement match and team models
-
-
-Build team generation algorithm
-
-
-Create endpoints for generating and displaying teams
-
-
-Week 3: UI, Testing, Documentation
-Build simple templates/UI pages
-
-
-Add optional features (match history, reshuffle)
-
-
-Test all endpoints
-
-
-Write final documentation
-
-
-Prepare for presentation/demo
+## 👨‍💻 Development Status
+**Current Phase**: Player Management Complete ✅  
+**Next Milestone**: Team Generation Algorithm 🎯  
+**Estimated Completion**: Week 3
 
 
 
