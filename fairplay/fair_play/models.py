@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 class Player(models.Model):
@@ -13,9 +14,14 @@ class Player(models.Model):
         max_length = 10,
         choices=Position.choices 
     )
-
+    rating = models.IntegerField(
+        default=3,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Player skill rating (1-5)"
+    )
+    
     def __str__(self):
-        return self.name
+        return f"{self.name} (Rating: {self.rating})"
     
     class Meta:
         ordering = ['name']
