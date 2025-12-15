@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from .forms import PlayerCreationForm
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Player
+from django.shortcuts import redirect
 
 # Create your views here.
 def index(request):
@@ -25,3 +26,34 @@ class PlayerListView(ListView):
     model = Player
     template_name = 'playerslist.html'
     context_object_name = 'players'
+
+#Remove a player from the original list 
+class DeletePlayerView(DeleteView):
+    model = Player
+    template_name = 'playerdelete.html'
+    context_object_name = 'player'
+    success_url = reverse_lazy('playerslist')
+
+    def delete(self,request,*args,**kwargs):
+        messages.success(self.request,"Player removed successfully")
+        return super().delete(request,*args,**kwargs)
+
+#Update a player's detail(name, rating, position)
+class UpdatePlayerView(UpdateView):
+    model = Player
+    form_class = PlayerCreationForm
+    template_name = 'playerupdate.html'
+    success_url = reverse_lazy('playerslist')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Player updated successfully')
+        return super().form_valid(form)
+
+# Reset all players
+
+def reset_players(request):
+    if request.method == 'POST':
+        Player.objects.all().delete()
+        messages.success(request, 'All players have been removed. Starting fresh!')
+        return redirect('index')
+    return render(request, 'reset_confirm.html')
