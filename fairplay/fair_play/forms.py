@@ -36,4 +36,19 @@ class TeamForm(forms.Form):
             'placeholder': 'Enter number of Teams (2-10)'
         })
     )
+
+    def __init__(self, *args, **kwargs):
+        num_of_teams = kwargs.pop('num_of_teams', 2)
+        super().__init__(*args, **kwargs)
+
+        for i in range(1, num_of_teams+1):
+            self.fields[f"team_{i}_name"] = forms.CharField(
+                max_length=100,
+                label=f'Team {i} Name',
+                widget=forms.TextInput(attrs={
+                    'class':'form-control',
+                    'placeholder':f'Enter name of Team {i} '
+                })
+            )
+
     
