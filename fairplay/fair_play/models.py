@@ -19,6 +19,7 @@ class Player(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         help_text="Player skill rating (1-5)"
     )
+    team = models.ForeignKey('Team', on_delete=models.SET_NULL, null= True, blank=True, related_name='players')
     
     def __str__(self):
         return f"{self.name} (Rating: {self.rating})"
@@ -28,7 +29,6 @@ class Player(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=100)
-    players = models.ManyToManyField(Player, related_name='teams' ,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

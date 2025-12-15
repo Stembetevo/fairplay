@@ -25,3 +25,15 @@ class PlayerCreationForm(forms.ModelForm):
                 }
             ),
         }
+
+class TeamForm(forms.Form):
+    number_of_teams = forms.IntegerField(
+        min_value=2,
+        max_value=10,
+        label = 'No of Teams',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter number of Teams (2-10)'
+        })
+    )
+    

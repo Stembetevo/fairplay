@@ -39,6 +39,16 @@
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'index' %}">⚽ FairPlay</a>
+            <div>
+                <a href="{% url 'playerslist' %}" class="btn btn-outline-light btn-sm me-2">All Players</a>
+                <a href="{% url 'reset' %}" class="btn btn-outline-danger btn-sm">Reset All</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="header-container">
         <div class="container text-center">
             <h1 class="display-4">FairPlay</h1>
