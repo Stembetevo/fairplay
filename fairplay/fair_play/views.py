@@ -85,6 +85,11 @@ def generate_balanced_teams(player_ids,team_names):
         team_ratings[team_name] += player.rating
     return teams, team_ratings
 
+def team_form_view(request):
+    """Display the form to input team names and count"""
+    player_count = Player.objects.count()
+    return render(request, 'team_form.html', {'player_count': player_count})
+
 def generate_teams_view(request):
     if request.method == 'POST':
         #GET the team names from the Form
@@ -109,4 +114,21 @@ def generate_teams_view(request):
                 player.save()
         
         messages.success(request, f'Created {len(team_names)} balanced teams!')
-        return redirect(request, 'team_form.html')
+        return redirect('teams_display')
+    return redirect('team_form')
+
+def teams_display_view(request):
+    """Display the generated teams with their players"""
+    teams = Team.objects.all().prefetch_related('players')
+    
+    # Calculate total and average ratings for each team
+    teams_with_stats = []
+    for team in teams:
+        total_rating = sum(player.rating for player in team.players.all())
+        player_count = team.players.count()
+        avg_rating = total_rating / player_count if player_count > 0 else 0
+        team.total_rating = total_rating
+        team.avg_rating = avg_rating
+        teams_with_stats.append(team)
+    
+    return render(request, 'teams_display.html', {'teams': teams_with_stats})
