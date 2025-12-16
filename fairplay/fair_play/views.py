@@ -93,12 +93,25 @@ def team_form_view(request):
 def generate_teams_view(request):
     if request.method == 'POST':
         #GET the team names from the Form
+        num_teams = int(request.POST.get('num_teams', 2))
         team_names = [
-            request.POST.get(f'team_{i}_name')
-            for i in range(1, int(request.POST.get('num_teams')) + 1)
+            request.POST.get(f'team_{i}_name', f'Team {i}').strip()
+            for i in range(1, num_teams + 1)
         ]
+        
+        # Filter out any empty team names and ensure they're not None
+        team_names = [name for name in team_names if name]
+        
+        if not team_names:
+            messages.error(request, 'Please provide at least one team name.')
+            return redirect('team_form')
+        
         #Get the player ids for the snake draft algorithm
         player_ids = list(Player.objects.values_list('id', flat=True))
+        
+        if not player_ids:
+            messages.error(request, 'No players available. Please add players first.')
+            return redirect('playeradd')
 
         teams_dict, ratings = generate_balanced_teams(player_ids, team_names)
         #Clear old teams
@@ -107,7 +120,7 @@ def generate_teams_view(request):
 
         for team_name, players in teams_dict.items():
             #Create a team
-            team = Team.objects.create(name= team_name)
+            team = Team.objects.create(name=team_name)
 
             for player in players:
                 player.team = team

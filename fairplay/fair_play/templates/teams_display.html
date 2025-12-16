@@ -100,37 +100,7 @@
         </div>
 
         {% if teams %}
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5>Team Balance Summary</h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Team Name</th>
-                                        <th>Players</th>
-                                        <th>Total Rating</th>
-                                        <th>Avg Rating</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for team in teams %}
-                                        <tr>
-                                            <td><strong>{{ team.name }}</strong></td>
-                                            <td>{{ team.players.count }}</td>
-                                            <td>{{ team.total_rating }}</td>
-                                            <td>{{ team.avg_rating|floatformat:2 }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
         {% endif %}
 
         <div class="text-center mt-4 mb-4">
