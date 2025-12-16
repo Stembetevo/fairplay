@@ -3,7 +3,7 @@ from .forms import PlayerCreationForm
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Player
+from .models import Player, Team
 from django.shortcuts import redirect
 
 # Create your views here.
@@ -57,3 +57,56 @@ def reset_players(request):
         messages.success(request, 'All players have been removed. Starting fresh!')
         return redirect('index')
     return render(request, 'reset_confirm.html')
+
+#Snake Draft Algorithm
+def generate_balanced_teams(player_ids,team_names):
+    #Step1- Get the players by ratings (high to low)
+    players = list(
+        Player.objects.filter(id__in=player_ids)
+        .order_by('-rating','position')
+    )
+
+    #Step2- Create empty teams
+    teams = {name: [] for name in team_names}
+    team_ratings = {name: 0 for name in team_names}
+
+    #Distribute the players
+    num_teams = len(team_names)
+
+    for index,player in enumerate(players):
+        iteration_number = index // num_teams
+        position_in_iteration = index % num_teams
+
+        if iteration_number % 2 == 1:
+            position_in_iteration = num_teams - 1 - position_in_iteration
+
+        team_name = team_names[position_in_iteration]
+        teams[team_name].append(player)
+        team_ratings[team_name] += player.rating
+    return teams, team_ratings
+
+def generate_teams_view(request):
+    if request.method == 'POST':
+        #GET the team names from the Form
+        team_names = [
+            request.POST.get(f'team_{i}_name')
+            for i in range(1, int(request.POST.get('num_teams')) + 1)
+        ]
+        #Get the player ids for the snake draft algorithm
+        player_ids = list(Player.objects.values_list('id', flat=True))
+
+        teams_dict, ratings = generate_balanced_teams(player_ids, team_names)
+        #Clear old teams
+        Team.objects.all().delete()
+        Player.objects.update(team=None)
+
+        for team_name, players in teams_dict.items():
+            #Create a team
+            team = Team.objects.create(name= team_name)
+
+            for player in players:
+                player.team = team
+                player.save()
+        
+        messages.success(request, f'Created {len(team_names)} balanced teams!')
+        return redirect(request, 'team_form.html')
