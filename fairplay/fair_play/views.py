@@ -126,7 +126,7 @@ def generate_teams_view(request):
                 player.team = team
                 player.save()
         
-        messages.success(request, f'Created {len(team_names)} balanced teams!')
+        messages.success(request, f'Created {len(team_names)} teams!')
         return redirect('teams_display')
     return redirect('team_form')
 
