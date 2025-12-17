@@ -14,7 +14,7 @@ class PlayerModelTest(TestCase):
         self.player = Player.objects.create(
             name="John Doe",
             position=Player.Position.ST,
-            rating=4,
+            rating=85,
             team=self.team
         )
     
@@ -22,26 +22,26 @@ class PlayerModelTest(TestCase):
         """Test that a player can be created successfully"""
         self.assertEqual(self.player.name, "John Doe")
         self.assertEqual(self.player.position, "Striker")
-        self.assertEqual(self.player.rating, 4)
+        self.assertEqual(self.player.rating, 85)
         self.assertEqual(self.player.team, self.team)
     
     def test_player_str_method(self):
         """Test the string representation of a player"""
-        expected = "John Doe (Rating: 4)"
+        expected = "John Doe (Rating: 85)"
         self.assertEqual(str(self.player), expected)
     
     def test_player_default_rating(self):
-        """Test that the default rating is 3"""
+        """Test that the default rating is 70"""
         player = Player.objects.create(
             name="Jane Smith",
             position=Player.Position.GK
         )
-        self.assertEqual(player.rating, 3)
+        self.assertEqual(player.rating, 70)
     
     def test_player_rating_validation(self):
         """Test that rating validation works (50-100 range)"""
         # Valid ratings should work
-        for rating in range(50, 100):
+        for rating in [50, 75, 100]:
             player = Player(
                 name=f"Player {rating}",
                 position=Player.Position.MD,
@@ -53,15 +53,15 @@ class PlayerModelTest(TestCase):
         invalid_player = Player(
             name="Invalid Player",
             position=Player.Position.DF,
-            rating=60
+            rating=49
         )
         with self.assertRaises(ValidationError):
             invalid_player.full_clean()
     
     def test_player_ordering(self):
         """Test that players are ordered by name"""
-        Player.objects.create(name="Zara", position=Player.Position.ST, rating=3)
-        Player.objects.create(name="Adam", position=Player.Position.DF, rating=4)
+        Player.objects.create(name="Zara", position=Player.Position.ST, rating=70)
+        Player.objects.create(name="Adam", position=Player.Position.DF, rating=80)
         
         players = list(Player.objects.all())
         self.assertEqual(players[0].name, "Adam")
@@ -132,27 +132,27 @@ class PlayerCreationFormTest(TestCase):
         form_data = {
             'name': 'Test Player',
             'position': Player.Position.ST,
-            'rating': 4
+            'rating': 75
         }
         form = PlayerCreationForm(data=form_data)
         self.assertTrue(form.is_valid())
     
     def test_invalid_rating_too_high(self):
-        """Test that rating above 5 is invalid"""
+        """Test that rating above 100 is invalid"""
         form_data = {
             'name': 'Test Player',
             'position': Player.Position.ST,
-            'rating': 6
+            'rating': 101
         }
         form = PlayerCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
     
     def test_invalid_rating_too_low(self):
-        """Test that rating below 1 is invalid"""
+        """Test that rating below 50 is invalid"""
         form_data = {
             'name': 'Test Player',
             'position': Player.Position.ST,
-            'rating': 0
+            'rating': 49
         }
         form = PlayerCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -162,7 +162,7 @@ class PlayerCreationFormTest(TestCase):
         form_data = {
             'name': '',
             'position': Player.Position.ST,
-            'rating': 3
+            'rating': 75
         }
         form = PlayerCreationForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -177,12 +177,12 @@ class ViewsTest(TestCase):
         self.player1 = Player.objects.create(
             name="Player 1",
             position=Player.Position.ST,
-            rating=5
+            rating=85
         )
         self.player2 = Player.objects.create(
             name="Player 2",
             position=Player.Position.GK,
-            rating=3
+            rating=70
         )
     
     def test_index_view(self):
@@ -211,14 +211,14 @@ class ViewsTest(TestCase):
         response = self.client.post(reverse('playeradd'), {
             'name': 'New Player',
             'position': Player.Position.MD,
-            'rating': 4
+            'rating': 75
         })
         self.assertEqual(Player.objects.count(), player_count_before + 1)
         self.assertRedirects(response, reverse('playerslist'))
         
         # Check the player was created
         new_player = Player.objects.get(name='New Player')
-        self.assertEqual(new_player.rating, 4)
+        self.assertEqual(new_player.rating, 75)
     
     def test_update_player_view_get(self):
         """Test GET request to update player view"""
@@ -231,7 +231,7 @@ class ViewsTest(TestCase):
         response = self.client.post(reverse('playerupdate', kwargs={'pk': self.player1.pk}), {
             'name': 'Updated Player',
             'position': Player.Position.DF,
-            'rating': 5
+            'rating': 80
         })
         self.assertRedirects(response, reverse('playerslist'))
         
@@ -298,7 +298,7 @@ class BalancedTeamsGenerationTest(TestCase):
         self.client = Client()
         # Create players with different ratings
         self.players = [
-            Player.objects.create(name=f"Player {i}", position=Player.Position.ST, rating=5-i%5)
+            Player.objects.create(name=f"Player {i}", position=Player.Position.ST, rating=50+i*5)
             for i in range(10)
         ]
     
@@ -344,13 +344,13 @@ class BalancedTeamsGenerationTest(TestCase):
         
         # Check that the ratings are relatively balanced (difference should be small)
         rating_difference = abs(ratings[0] - ratings[1])
-        self.assertLessEqual(rating_difference, 5)  # Allow some variance
+        self.assertLessEqual(rating_difference, 10)  # Allow some variance for 50-100 scale
     
     def test_generate_multiple_teams(self):
         """Test generating more than 2 teams"""
         # Create more players for better distribution
         for i in range(10, 20):
-            Player.objects.create(name=f"Player {i}", position=Player.Position.MD, rating=3)
+            Player.objects.create(name=f"Player {i}", position=Player.Position.MD, rating=70)
         
         response = self.client.post(reverse('generate_teams'), {
             'num_teams': 4,
