@@ -88,9 +88,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="{{ form.rating.id_for_label }}" class="form-label">Rating (1-5)</label>
+                                <label for="{{ form.rating.id_for_label }}" class="form-label">Rating (50-100)</label>
                                 {{ form.rating }}
-                                <small class="form-text text-muted">Rate player skill from 1 (beginner) to 5 (expert)</small>
+                                <small class="form-text text-muted">Rate player skill from 50 (beginner) to 100 (expert)</small>
                                 {% if form.rating.errors %}
                                     <div class="text-danger">{{ form.rating.errors }}</div>
                                 {% endif %}

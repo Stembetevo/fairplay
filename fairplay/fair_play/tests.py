@@ -39,9 +39,9 @@ class PlayerModelTest(TestCase):
         self.assertEqual(player.rating, 3)
     
     def test_player_rating_validation(self):
-        """Test that rating validation works (1-5 range)"""
+        """Test that rating validation works (50-100 range)"""
         # Valid ratings should work
-        for rating in range(1, 6):
+        for rating in range(50, 100):
             player = Player(
                 name=f"Player {rating}",
                 position=Player.Position.MD,
@@ -53,7 +53,7 @@ class PlayerModelTest(TestCase):
         invalid_player = Player(
             name="Invalid Player",
             position=Player.Position.DF,
-            rating=6
+            rating=60
         )
         with self.assertRaises(ValidationError):
             invalid_player.full_clean()

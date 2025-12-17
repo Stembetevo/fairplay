@@ -8,7 +8,7 @@ FairPlay is a Django-based web application that solves the common problem of cre
 ### ✅ Completed Features
 
 #### 1. **Player Management System**
-- Add players with name, position (Striker/Defender/Midfielder/Goalkeeper), and skill rating (1-5)
+- Add players with name, position (Striker/Defender/Midfielder/Goalkeeper), and skill rating (50-100)
 - View all registered players in an organized table
 - Edit player details (name, position, rating)
 - Delete players from the system
@@ -110,7 +110,7 @@ fairplay/
 ### Player Model
 - `name`: CharField - Player's name
 - `position`: CharField with choices (Striker, Defender, Midfielder, Goalkeeper)
-- `rating`: IntegerField (1-5) - Skill level
+- `rating`: IntegerField (50-100) - Skill level
 - `team`: ForeignKey to Team (nullable)
 
 ### Team Model
