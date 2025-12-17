@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,39 +7,65 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #000000;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
         }
         .container {
             color: #ffffff;
         }
+        h2 {
+            color: #ffffff;
+            font-weight: 600;
+        }
         .team-card {
-            background-color: black;
-            border: 2px solid #dee2e6;
+            background-color: #2d2d2d;
+            border: 2px solid #404040;
             border-radius: 10px;
             transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .team-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(255,255,255,0.2);
+            box-shadow: 0 8px 16px rgba(13,110,253,0.3);
+            border-color: #0d6efd;
         }
         .team-header {
-            background: linear-gradient(135deg, #f6f7fa 0%, #252425 100%);
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
             color: white;
             padding: 20px;
             border-radius: 8px 8px 0 0;
         }
+        .card-body {
+            background-color: #2d2d2d;
+        }
+        .card-title {
+            color: #ffffff;
+        }
         .player-item {
             padding: 10px;
             margin: 5px 0;
-            background-color: black;
-            border-radius: 10px;
-            border: 2px solid #dddfeb;
+            background-color: #3d3d3d;
+            border-radius: 8px;
+            border: 1px solid #505050;
+            color: #ffffff;
+        }
+        .player-item strong {
+            color: #ffffff;
+        }
+        .player-item .text-muted {
+            color: #adb5bd !important;
         }
         .rating-badge {
             float: right;
         }
-        .card {
-            background-color: #ffffff;
+        .alert-warning {
+            background-color: #664d03;
+            border-color: #997404;
+            color: #ffecb5;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -83,7 +109,7 @@
                                 {% for player in team.players.all %}
                                     <div class="player-item">
                                         <strong>{{ player.name }}</strong>
-                                        <span class="badge bg-primary rating-badge">{{ player.rating }}/5</span>
+                                        <span class="badge bg-primary rating-badge">{{ player.rating }}</span>
                                         <br>
                                         <small class="text-muted">{{ player.get_position_display }}</small>
                                     </div>

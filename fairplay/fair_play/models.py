@@ -15,9 +15,9 @@ class Player(models.Model):
         choices=Position.choices 
     )
     rating = models.IntegerField(
-        default=3,
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Player skill rating (1-5)"
+        default=70,
+        validators=[MinValueValidator(50), MaxValueValidator(100)],
+        help_text="Player skill rating (50-100)"
     )
     team = models.ForeignKey('Team', on_delete=models.SET_NULL, null= True, blank=True, related_name='players')
     

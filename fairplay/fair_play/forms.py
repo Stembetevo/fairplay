@@ -14,9 +14,9 @@ class PlayerCreationForm(forms.ModelForm):
             'rating' : forms.NumberInput(
                 attrs={
                     'class' : 'form-control',
-                    'placeholder' : 'rating from 1-5',
-                    'min': '1',
-                    'max': '5'
+                    'placeholder' : 'rating from 50-100',
+                    'min': '50',
+                    'max': '100'
                 }
             ),
             'position': forms.Select(
