@@ -5,10 +5,15 @@ from .models import Player, Team, Match
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'position', 'rating', 'team')
+    list_display = ('get_username', 'position', 'rating', 'team')
     list_filter = ('position', 'rating', 'team')
-    search_fields = ('name',)
-    ordering = ('-rating', 'name')
+    search_fields = ('user__username',)
+    ordering = ('-rating', 'user__username')
+    
+    def get_username(self, obj):
+        return obj.user.username
+    get_username.short_description = 'Username'
+    get_username.admin_order_field = 'user__username'
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):

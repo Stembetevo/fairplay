@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from .forms import PlayerCreationForm
+from .forms import PlayerSearchForm
+from django.contrib.auth.models import User
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -12,14 +13,33 @@ def index(request):
     return render(request, 'index.html')
 
 
-class CreatePlayerView(CreateView):
-    form_class = PlayerCreationForm
-    template_name = 'playeradd.html'
-    success_url = reverse_lazy('playerslist')
-
-    def form_valid(self, form):
-        messages.success(self.request, 'Player added successfully')
-        return super().form_valid(form)
+def add_player_view(request):
+    """View to search for a user and add them as a player"""
+    if request.method == 'POST':
+        form = PlayerSearchForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            try:
+                user = User.objects.get(username=username)
+                position = form.cleaned_data.get('position_override') or user.profile.preferred_position
+                rating = form.cleaned_data.get('rating', 70)
+                
+                # Create player instance
+                # Note: owner should be request.user when auth is added
+                Player.objects.create(
+                    user=user,
+                    owner=user,  # Temporary - should be request.user when auth is added
+                    position=position,
+                    rating=rating
+                )
+                messages.success(request, f'Added {username} to your team!')
+                return redirect('playerslist')
+            except User.DoesNotExist:
+                messages.error(request, f'User "{username}" not found.')
+    else:
+        form = PlayerSearchForm()
+    
+    return render(request, 'playeradd.html', {'form': form})
 
 
 class PlayerListView(ListView):
@@ -41,7 +61,7 @@ class DeletePlayerView(DeleteView):
 #Update a player's detail(name, rating, position)
 class UpdatePlayerView(UpdateView):
     model = Player
-    form_class = PlayerCreationForm
+    fields = ['position', 'rating']
     template_name = 'playerupdate.html'
     success_url = reverse_lazy('playerslist')
 

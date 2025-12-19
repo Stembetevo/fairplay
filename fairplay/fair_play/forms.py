@@ -3,7 +3,7 @@ from .models import Player, Team
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-class PlayerSearchForm(forms.ModelForm):
+class PlayerSearchForm(forms.Form):
     username = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={
