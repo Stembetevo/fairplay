@@ -1,30 +1,37 @@
 from django import forms
 from .models import Player, Team
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
-class PlayerCreationForm(forms.ModelForm):
-    class Meta:
-        model = Player
-        fields = ['name', 'position', 'rating']
-        widgets = {
-            'name' : forms.TextInput(
-                attrs={
-                'class':'form-control',
-                'placeholder': 'Enter Player name'
-            }),
-            'rating' : forms.NumberInput(
-                attrs={
-                    'class' : 'form-control',
-                    'placeholder' : 'rating from 50-100',
-                    'min': '50',
-                    'max': '100'
-                }
-            ),
-            'position': forms.Select(
-                attrs={
-                    'class': 'form-control'
-                }
-            ),
-        }
+class PlayerSearchForm(forms.ModelForm):
+    username = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class':'form-control',
+            'placeholder':'Search for Username...',
+            'autocomplete':'on'
+        }),
+        help_text='Enter the username of a registered player'
+    )
+    position_override = forms.ChoiceField(
+        choices=Player.Position.choices,
+        required=False,
+        widget = forms.Select(attrs={
+            'class':'form-control'
+        }),
+    )
+    rating = forms.IntegerField(
+        initial=70,
+        min_value=50,
+        max_value=100,
+        widget = forms.NumberInput(attrs={
+            'class':'form-control',
+            'placeholder':'50-100',
+            'min':'50',
+            'max':'100'
+        })
+    )
+    
 
 class TeamForm(forms.Form):
     number_of_teams = forms.IntegerField(
@@ -50,5 +57,50 @@ class TeamForm(forms.Form):
                     'placeholder':f'Enter name of Team {i} '
                 })
             )
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Email address',
+        }),
+        help_text='Required. Enter a valid email address.'
+    )
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Choose a username',
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap classes to password fields
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Password',
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirm password',
+        })
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email address is already registered.')
+        return email
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
 
     

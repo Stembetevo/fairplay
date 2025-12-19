@@ -145,3 +145,6 @@ def teams_display_view(request):
         teams_with_stats.append(team)
     
     return render(request, 'teams_display.html', {'teams': teams_with_stats})
+
+class RegisterView():
+    pass
