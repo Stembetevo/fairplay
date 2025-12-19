@@ -1,20 +1,29 @@
-from django.shortcuts import render
-from .forms import PlayerSearchForm
+from django.shortcuts import render, redirect
+from .forms import PlayerSearchForm, CustomUserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Player, Team
-from django.shortcuts import redirect
+from .forms import CustomUserCreationForm
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+
 
 # Create your views here.
 def index(request):
-    #Main page view
+    """Main page view - redirect authenticated users to their player list"""
+    if request.user.is_authenticated:
+        return redirect('playerslist')
     return render(request, 'index.html')
 
 
+@login_required
 def add_player_view(request):
-    """View to search for a user and add them as a player"""
     if request.method == 'POST':
         form = PlayerSearchForm(request.POST)
         if form.is_valid():
@@ -25,10 +34,9 @@ def add_player_view(request):
                 rating = form.cleaned_data.get('rating', 70)
                 
                 # Create player instance
-                # Note: owner should be request.user when auth is added
                 Player.objects.create(
                     user=user,
-                    owner=user,  # Temporary - should be request.user when auth is added
+                    owner=request.user,
                     position=position,
                     rating=rating
                 )
@@ -42,39 +50,52 @@ def add_player_view(request):
     return render(request, 'playeradd.html', {'form': form})
 
 
-class PlayerListView(ListView):
+class PlayerListView(LoginRequiredMixin, ListView):
     model = Player
     template_name = 'playerslist.html'
     context_object_name = 'players'
+    
+    def get_queryset(self):
+        # Only show players owned by the current user
+        return Player.objects.filter(owner=self.request.user)
 
 #Remove a player from the original list 
-class DeletePlayerView(DeleteView):
+class DeletePlayerView(LoginRequiredMixin, DeleteView):
     model = Player
     template_name = 'playerdelete.html'
     context_object_name = 'player'
     success_url = reverse_lazy('playerslist')
+    
+    def get_queryset(self):
+        # Only allow deletion of own players
+        return Player.objects.filter(owner=self.request.user)
 
     def delete(self,request,*args,**kwargs):
         messages.success(self.request,"Player removed successfully")
         return super().delete(request,*args,**kwargs)
 
 #Update a player's detail(name, rating, position)
-class UpdatePlayerView(UpdateView):
+class UpdatePlayerView(LoginRequiredMixin, UpdateView):
     model = Player
     fields = ['position', 'rating']
     template_name = 'playerupdate.html'
     success_url = reverse_lazy('playerslist')
+    
+    def get_queryset(self):
+        # Only allow updating own players
+        return Player.objects.filter(owner=self.request.user)
 
     def form_valid(self, form):
         messages.success(self.request, 'Player updated successfully')
         return super().form_valid(form)
 
 # Reset all players
-
+@login_required
 def reset_players(request):
     if request.method == 'POST':
-        Player.objects.all().delete()
-        messages.success(request, 'All players have been removed. Starting fresh!')
+        # Only delete current user's players
+        Player.objects.filter(owner=request.user).delete()
+        messages.success(request, 'All your players have been removed. Starting fresh!')
         return redirect('index')
     return render(request, 'reset_confirm.html')
 
@@ -105,11 +126,13 @@ def generate_balanced_teams(player_ids,team_names):
         team_ratings[team_name] += player.rating
     return teams, team_ratings
 
+@login_required
 def team_form_view(request):
     """Display the form to input team names and count"""
-    player_count = Player.objects.count()
+    player_count = Player.objects.filter(owner=request.user).count()
     return render(request, 'team_form.html', {'player_count': player_count})
 
+@login_required
 def generate_teams_view(request):
     if request.method == 'POST':
         #GET the team names from the Form
@@ -126,21 +149,22 @@ def generate_teams_view(request):
             messages.error(request, 'Please provide at least one team name.')
             return redirect('team_form')
         
-        #Get the player ids for the snake draft algorithm
-        player_ids = list(Player.objects.values_list('id', flat=True))
+        #Get the player ids for the snake draft algorithm (only current user's players)
+        player_ids = list(Player.objects.filter(owner=request.user).values_list('id', flat=True))
         
         if not player_ids:
             messages.error(request, 'No players available. Please add players first.')
             return redirect('playeradd')
 
         teams_dict, ratings = generate_balanced_teams(player_ids, team_names)
-        #Clear old teams
-        Team.objects.all().delete()
-        Player.objects.update(team=None)
+        
+        #Clear old teams owned by current user
+        Team.objects.filter(owner=request.user).delete()
+        Player.objects.filter(owner=request.user).update(team=None)
 
         for team_name, players in teams_dict.items():
             #Create a team
-            team = Team.objects.create(name=team_name)
+            team = Team.objects.create(name=team_name, owner=request.user)
 
             for player in players:
                 player.team = team
@@ -150,9 +174,10 @@ def generate_teams_view(request):
         return redirect('teams_display')
     return redirect('team_form')
 
+@login_required
 def teams_display_view(request):
     """Display the generated teams with their players"""
-    teams = Team.objects.all().prefetch_related('players')
+    teams = Team.objects.filter(owner=request.user).prefetch_related('players')
     
     # Calculate total and average ratings for each team
     teams_with_stats = []
@@ -166,5 +191,48 @@ def teams_display_view(request):
     
     return render(request, 'teams_display.html', {'teams': teams_with_stats})
 
-class RegisterView():
-    pass
+
+def register_view(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('playerslist')
+    
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Welcome {user.username}! Your account has been created.')
+            return redirect('playerslist')
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
+
+def login_view(request):
+    """User login view"""
+    if request.user.is_authenticated:
+        return redirect('playerslist')
+    
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome back, {username}!')
+                return redirect('playerslist')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'registration/login.html', {'form': form})
+
+def logout_view(request):
+    """User logout view"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('index')
