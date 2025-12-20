@@ -12,7 +12,7 @@ from .models import Player, Team
 from .forms import CustomUserCreationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
-
+from django.db.models import Q
 
 # Create your views here.
 def index(request):
@@ -68,7 +68,10 @@ class DeletePlayerView(LoginRequiredMixin, DeleteView):
     
     def get_queryset(self):
         # Only allow deletion of own players
-        return Player.objects.filter(owner=self.request.user)
+        return Player.objects.filter(
+            Q(owner=self.request.user)|
+            Q(team__owner = self.request.user)
+        )
 
     def delete(self,request,*args,**kwargs):
         messages.success(self.request,"Player removed successfully")
@@ -82,8 +85,11 @@ class UpdatePlayerView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('playerslist')
     
     def get_queryset(self):
-        # Only allow updating own players
-        return Player.objects.filter(owner=self.request.user)
+        # Only allow deletion of own players
+        return Player.objects.filter(
+            Q(owner=self.request.user)|
+            Q(team__owner = self.request.user)
+        )
 
     def form_valid(self, form):
         messages.success(self.request, 'Player updated successfully')
@@ -166,9 +172,13 @@ def generate_teams_view(request):
             #Create a team
             team = Team.objects.create(name=team_name, owner=request.user)
 
+            #Add the owner as a member
+            team.members.add(request.user)
+
             for player in players:
                 player.team = team
                 player.save()
+                team.members.add(player.user)
         
         messages.success(request, f'Created {len(team_names)} teams!')
         return redirect('teams_display')
@@ -177,19 +187,27 @@ def generate_teams_view(request):
 @login_required
 def teams_display_view(request):
     """Display the generated teams with their players"""
-    teams = Team.objects.filter(owner=request.user).prefetch_related('players')
-    
+    owned_teams = Team.objects.filter(members = request.user).prefetch_related('players', 'members')
+    member_teams = Team.objects.filter(member = request.user).exclude(owner = request.user).prefetch_related('players','members', 'owner') 
     # Calculate total and average ratings for each team
-    teams_with_stats = []
-    for team in teams:
-        total_rating = sum(player.rating for player in team.players.all())
-        player_count = team.players.count()
-        avg_rating = total_rating / player_count if player_count > 0 else 0
-        team.total_rating = total_rating
-        team.avg_rating = avg_rating
-        teams_with_stats.append(team)
+    teams_owned_with_stats = []
+    for team in owned_teams:
+        total_rating =sum(player.rating for player in team.players.all())
+        count = team.players.count()
+        team.avg_rating = (total_rating / count) if count > 0 else 0 
+        teams_owned_with_stats.append(team)
     
-    return render(request, 'teams_display.html', {'teams': teams_with_stats})
+    teams_member_with_stats = []
+    for team in member_teams:
+        total_rating =sum(player.rating for player in team.players.all())
+        count = team.players.count()
+        team.avg_rating = (total_rating / count) if count > 0 else 0 
+        teams_owned_with_stats.append(team)
+    
+    return render(request, 'teams_display.html', {
+        'owned_teams' : teams_owned_with_stats,
+        'member_teams' : teams_member_with_stats
+    })
 
 
 def register_view(request):

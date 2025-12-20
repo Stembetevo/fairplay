@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Teams - FairPlay</title>
+    <title>Teams - FairPlay</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -11,61 +11,65 @@
             color: #e0e0e0;
             min-height: 100vh;
         }
-        .container {
-            color: #ffffff;
+        .section-divider {
+            background: #2d2d2d;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin: 30px 0 20px 0;
+            border-left: 4px solid #0d6efd;
         }
-        h2 {
-            color: #ffffff;
-            font-weight: 600;
+        .section-divider h3 {
+            margin: 0;
+            color: #fff;
         }
-        .team-card {
+        .team-box {
             background-color: #2d2d2d;
             border: 2px solid #404040;
             border-radius: 10px;
-            transition: transform 0.2s;
+            transition: all 0.3s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
-        .team-card:hover {
-            transform: translateY(-5px);
+        .team-box:hover {
+            transform: translateY(-3px);
             box-shadow: 0 8px 16px rgba(13,110,253,0.3);
-            border-color: #0d6efd;
         }
-        .team-header {
+        .team-title-bar {
             background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
             color: white;
-            padding: 20px;
+            padding: 18px;
             border-radius: 8px 8px 0 0;
         }
-        .card-body {
+        .participant-team .team-title-bar {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        }
+        .team-content {
+            padding: 20px;
             background-color: #2d2d2d;
         }
-        .card-title {
-            color: #ffffff;
-        }
-        .player-item {
-            padding: 10px;
-            margin: 5px 0;
+        .player-row {
+            padding: 12px;
+            margin: 8px 0;
             background-color: #3d3d3d;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #505050;
-            color: #ffffff;
         }
-        .player-item strong {
-            color: #ffffff;
-        }
-        .player-item .text-muted {
-            color: #adb5bd !important;
-        }
-        .rating-badge {
+        .score-badge {
             float: right;
         }
-        .alert-warning {
-            background-color: #664d03;
-            border-color: #997404;
-            color: #ffecb5;
+        .member-list-box {
+            background-color: #3d3d3d;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 18px;
         }
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        .placeholder-box {
+            background-color: #2d2d2d;
+            border: 2px dashed #505050;
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            color: #adb5bd;
         }
     </style>
 </head>
@@ -74,70 +78,143 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'index' %}">⚽ FairPlay</a>
             <div>
-                <a href="{% url 'playerslist' %}" class="btn btn-outline-light btn-sm me-2">All Players</a>
-                <a href="{% url 'generate_teams' %}" class="btn btn-outline-success btn-sm">Generate New Teams</a>
+                <a href="{% url 'playerslist' %}" class="btn btn-outline-light btn-sm me-2">Players</a>
+                <a href="{% url 'team_form' %}" class="btn btn-success btn-sm">Create Teams</a>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="text-center mb-4">
-            <h2>⚽ Your Teams Are Ready!</h2>
-            
-        </div>
-
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
 
+        <!-- OWNED TEAMS SECTION -->
+        <div class="section-divider">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>👑 My Created Teams</h3>
+                <span class="badge bg-primary">{{ owned_teams|length }}</span>
+            </div>
+        </div>
+
         <div class="row">
-            {% for team in teams %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="team-card">
-                        <div class="team-header text-center">
-                            <h3 class="mb-0">{{ team.name }}</h3>
-                            
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">Players ({{ team.players.count }})</h5>
-                            {% if team.players.all %}
+            {% if owned_teams %}
+                {% for team in owned_teams %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="team-box">
+                            <div class="team-title-bar text-center">
+                                <h4 class="mb-0">{{ team.name }}</h4>
+                            </div>
+                            <div class="team-content">
+                                <div class="member-list-box">
+                                    <strong>Team Members:</strong><br>
+                                    {% for member in team.members.all %}
+                                        <span class="badge bg-secondary me-1 mt-1">
+                                            {{ member.username }}
+                                            {% if member == team.owner %}⭐{% endif %}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+
+                                <h6>Roster ({{ team.players.count }}):</h6>
                                 {% for player in team.players.all %}
-                                    <div class="player-item">
+                                    <div class="player-row">
                                         <strong>{{ player.name }}</strong>
-                                        <span class="badge bg-primary rating-badge">{{ player.rating }}</span>
+                                        <span class="badge bg-primary score-badge">{{ player.rating }}</span>
                                         <br>
                                         <small class="text-muted">{{ player.get_position_display }}</small>
                                     </div>
+                                {% empty %}
+                                    <p class="text-muted">Empty roster</p>
                                 {% endfor %}
-                            {% else %}
-                                <p class="text-muted">No players assigned</p>
-                            {% endif %}
+
+                                <div class="mt-3 text-center">
+                                    <small class="text-muted">
+                                        Total: {{ team.total_rating }} | Average: {{ team.avg_rating|floatformat:1 }}
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% empty %}
+                {% endfor %}
+            {% else %}
                 <div class="col-12">
-                    <div class="alert alert-warning text-center">
-                        <h4>No teams generated yet!</h4>
-                        <p>Click below to generate teams.</p>
-                        <a href="{% url 'generate_teams' %}" class="btn btn-primary mt-2">Generate Teams</a>
+                    <div class="placeholder-box">
+                        <h5>No teams created yet</h5>
+                        <p>Start by creating your first team!</p>
+                        <a href="{% url 'team_form' %}" class="btn btn-primary mt-2">Generate Teams</a>
                     </div>
                 </div>
-            {% endfor %}
+            {% endif %}
         </div>
 
-        {% if teams %}
-        
-        {% endif %}
+        <!-- MEMBER TEAMS SECTION -->
+        <div class="section-divider" style="border-left-color: #6f42c1;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>🤝 Teams I'm Part Of</h3>
+                <span class="badge bg-purple" style="background-color: #6f42c1;">{{ member_teams|length }}</span>
+            </div>
+        </div>
 
-        <div class="text-center mt-4 mb-4">
-            <a href="{% url 'generate_teams' %}" class="btn btn-primary me-2">Generate New Teams</a>
-            <a href="{% url 'playerslist' %}" class="btn btn-outline-secondary">View All Players</a>
+        <div class="row">
+            {% if member_teams %}
+                {% for team in member_teams %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="team-box participant-team">
+                            <div class="team-title-bar text-center">
+                                <h4 class="mb-0">{{ team.name }}</h4>
+                                <small>Created by: {{ team.owner.username }}</small>
+                            </div>
+                            <div class="team-content">
+                                <div class="member-list-box">
+                                    <strong>Team Members:</strong><br>
+                                    {% for member in team.members.all %}
+                                        <span class="badge bg-secondary me-1 mt-1">
+                                            {{ member.username }}
+                                            {% if member == team.owner %}⭐{% endif %}
+                                            {% if member == request.user %}(You){% endif %}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+
+                                <h6>Roster ({{ team.players.count }}):</h6>
+                                {% for player in team.players.all %}
+                                    <div class="player-row">
+                                        <strong>{{ player.name }}</strong>
+                                        <span class="badge bg-primary score-badge">{{ player.rating }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ player.get_position_display }}</small>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-muted">Empty roster</p>
+                                {% endfor %}
+
+                                <div class="mt-3 text-center">
+                                    <small class="text-muted">
+                                        Total: {{ team.total_rating }} | Average: {{ team.avg_rating|floatformat:1 }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="placeholder-box">
+                        <h5>Not added to any teams yet</h5>
+                        <p>You'll see teams here when someone adds you as a player</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="text-center my-5">
+            <a href="{% url 'playerslist' %}" class="btn btn-outline-light">Back to Players</a>
         </div>
     </div>
 
