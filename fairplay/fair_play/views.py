@@ -187,26 +187,29 @@ def generate_teams_view(request):
 @login_required
 def teams_display_view(request):
     """Display the generated teams with their players"""
-    owned_teams = Team.objects.filter(members = request.user).prefetch_related('players', 'members')
-    member_teams = Team.objects.filter(member = request.user).exclude(owner = request.user).prefetch_related('players','members', 'owner') 
+    owned_teams = Team.objects.filter(owner=request.user).prefetch_related('players', 'members')
+    member_teams = Team.objects.filter(members=request.user).exclude(owner=request.user).prefetch_related('players', 'members', 'owner')
+    
     # Calculate total and average ratings for each team
     teams_owned_with_stats = []
     for team in owned_teams:
-        total_rating =sum(player.rating for player in team.players.all())
+        total_rating = sum(player.rating for player in team.players.all())
         count = team.players.count()
-        team.avg_rating = (total_rating / count) if count > 0 else 0 
+        team.total_rating = total_rating
+        team.avg_rating = (total_rating / count) if count > 0 else 0
         teams_owned_with_stats.append(team)
     
     teams_member_with_stats = []
     for team in member_teams:
-        total_rating =sum(player.rating for player in team.players.all())
+        total_rating = sum(player.rating for player in team.players.all())
         count = team.players.count()
-        team.avg_rating = (total_rating / count) if count > 0 else 0 
-        teams_owned_with_stats.append(team)
+        team.total_rating = total_rating
+        team.avg_rating = (total_rating / count) if count > 0 else 0
+        teams_member_with_stats.append(team)
     
     return render(request, 'teams_display.html', {
-        'owned_teams' : teams_owned_with_stats,
-        'member_teams' : teams_member_with_stats
+        'owned_teams': teams_owned_with_stats,
+        'member_teams': teams_member_with_stats
     })
 
 
