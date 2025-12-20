@@ -67,10 +67,17 @@ class CustomUserCreationForm(UserCreationForm):
         }),
         help_text='Required. Enter a valid email address.'
     )
+    preferred_position = forms.ChoiceField(
+        choices=Player.Position.choices,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+        }),
+        help_text='Select your preferred playing position'
+    )
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2', 'preferred_position']
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -101,6 +108,8 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         if commit:
             user.save()
+            user.profile.preferred_position = self.cleaned_data['preferred_position']
+            user.profile.save()
         return user
 
     
