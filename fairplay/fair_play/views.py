@@ -8,11 +8,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Player, Team
+from .models import Player, Team, TeamMembership
 from .forms import CustomUserCreationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
+from django.utils import timezone
 
 # Create your views here.
 def index(request):

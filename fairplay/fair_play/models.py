@@ -34,8 +34,6 @@ class Player(models.Model):
     class Meta:
         ordering = ['user__username']
     
-    
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     preferred_position = models.CharField(
@@ -47,8 +45,7 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
-    
-  
+     
 @receiver(post_save, sender=User)
 def create_user_profile(sender,instance,created, **kwargs):
     if created:
@@ -68,13 +65,88 @@ class Team(models.Model):
         ordering = ['name']
 
 class Match(models.Model):
+    class Status(models.TextChoices):
+        SCHEDULED = 'Scheduled', 'Scheduled'
+        PLAYED = 'Played', 'Played'
+        CANCELLED = 'Cancelled', 'Cancelled'
+    
     date_created = models.DateTimeField(auto_now_add=True)
-    team_A = models.ForeignKey(Team,on_delete=models.CASCADE, related_name='teamA')
+    played_at = models.DateTimeField(null=True, blank=True, help_text="When the match is/was scheduled")
+    location = models.CharField(max_length=200, blank=True, help_text="Match venue")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.SCHEDULED
+    )
+    team_A = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='teamA')
     team_B = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='teamB')
+    score_a = models.IntegerField(null=True, blank=True, help_text="Team A goals")
+    score_b = models.IntegerField(null=True, blank=True, help_text="Team B goals")
 
     def __str__(self):
+        if self.score_a is not None and self.score_b is not None:
+            return f"{self.team_A} {self.score_a} - {self.score_b} {self.team_B}"
         return f"{self.team_A} vs {self.team_B}"
+    
+    @property
+    def winner(self):
+        """Returns winning team or None for draw/unplayed"""
+        if self.score_a is None or self.score_b is None:
+            return None
+        if self.score_a > self.score_b:
+            return self.team_A
+        elif self.score_b > self.score_a:
+            return self.team_B
+        return None  # Draw
     
     class Meta:
         ordering = ['-date_created']
+        verbose_name_plural = 'Matches'
+
+
+class TeamMembership(models.Model):
+    """Track historical team memberships for players"""
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='memberships')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='memberships')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    left_at = models.DateTimeField(null=True, blank=True, help_text="When player left the team")
     
+    def __str__(self):
+        status = "current" if self.left_at is None else f"left {self.left_at.strftime('%Y-%m-%d')}"
+        return f"{self.player.user.username} in {self.team.name} ({status})"
+    
+    class Meta:
+        ordering = ['-joined_at']
+        verbose_name_plural = 'Team Memberships'
+
+
+class MatchParticipation(models.Model):
+    """Track which players participated in which matches"""
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='participations')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='match_participations')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='match_participations')
+    minutes_played = models.IntegerField(null=True, blank=True, help_text="Minutes played in the match")
+    goals = models.IntegerField(default=0, help_text="Goals scored")
+    assists = models.IntegerField(default=0, help_text="Assists made")
+    match_rating = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        help_text="Match performance rating (1-10)"
+    )
+    
+    def __str__(self):
+        return f"{self.player.user.username} in {self.match}"
+    
+    class Meta:
+        ordering = ['-match__date_created']
+        unique_together = ['match', 'player']  # Player can only participate once per match
+class TeamMembership(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='team_members')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now=True, null=True)
+    left_at = models.DateTimeField(auto_now_add=True, null=True)
+
+class MatchParticipation(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
