@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Match{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">⚽ Schedule a Match</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.team_A.id_for_label }}" class="form-label">Team A</label>
+                            {{ form.team_A }}
+                            {% if form.team_A.errors %}
+                                <div class="alert alert-danger small mt-1">{{ form.team_A.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.team_B.id_for_label }}" class="form-label">Team B</label>
+                            {{ form.team_B }}
+                            {% if form.team_B.errors %}
+                                <div class="alert alert-danger small mt-1">{{ form.team_B.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.played_at.id_for_label }}" class="form-label">Match Date & Time</label>
+                            {{ form.played_at }}
+                            {% if form.played_at.errors %}
+                                <div class="alert alert-danger small mt-1">{{ form.played_at.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">Location (Optional)</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="alert alert-danger small mt-1">{{ form.location.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Schedule Match</button>
+                            <a href="{% url 'match_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

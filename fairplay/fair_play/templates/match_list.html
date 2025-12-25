@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Matches{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🏟️ Matches</h2>
+        <a href="{% url 'match_create' %}" class="btn btn-success">+ Schedule Match</a>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Upcoming Matches -->
+    <div class="mb-5">
+        <h4 class="mb-3">📋 Upcoming Matches</h4>
+        {% if upcoming_matches %}
+            <div class="row">
+                {% for match in upcoming_matches %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <strong>{{ match.team_A.name }}</strong> vs <strong>{{ match.team_B.name }}</strong>
+                                </h6>
+                                <p class="card-text small text-muted">
+                                    {% if match.played_at %}
+                                        📅 {{ match.played_at|date:"M d, Y g:i A" }}
+                                    {% else %}
+                                        📅 Date not set
+                                    {% endif %}
+                                    {% if match.location %}
+                                        <br>📍 {{ match.location }}
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'match_detail' match.id %}" class="btn btn-sm btn-info">View</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No upcoming matches. <a href="{% url 'match_create' %}">Schedule one now</a>.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Played Matches -->
+    <div>
+        <h4 class="mb-3">✅ Played Matches</h4>
+        {% if played_matches %}
+            <div class="row">
+                {% for match in played_matches %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <strong>{{ match.team_A.name }}</strong> 
+                                    <span class="badge bg-dark">
+                                        {{ match.score_a|default:"?" }} - {{ match.score_b|default:"?" }}
+                                    </span>
+                                    <strong>{{ match.team_B.name }}</strong>
+                                </h6>
+                                <p class="card-text small text-muted">
+                                    {% if match.played_at %}
+                                        📅 {{ match.played_at|date:"M d, Y g:i A" }}
+                                    {% endif %}
+                                    {% if match.location %}
+                                        <br>📍 {{ match.location }}
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'match_detail' match.id %}" class="btn btn-sm btn-info">Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No played matches yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

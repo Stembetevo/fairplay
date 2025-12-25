@@ -1,5 +1,5 @@
 from django import forms
-from .models import Player, Team
+from .models import Player, Team, Match, MatchParticipation
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
@@ -111,5 +111,61 @@ class CustomUserCreationForm(UserCreationForm):
             user.profile.preferred_position = self.cleaned_data['preferred_position']
             user.profile.save()
         return user
+
+
+class MatchForm(forms.ModelForm):
+    """Form for creating/scheduling matches"""
+    class Meta:
+        model = Match
+        fields = ['team_A', 'team_B', 'played_at', 'location']
+        widgets = {
+            'team_A': forms.Select(attrs={'class': 'form-control'}),
+            'team_B': forms.Select(attrs={'class': 'form-control'}),
+            'played_at': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local',
+                'placeholder': 'YYYY-MM-DD HH:MM'
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Match venue'
+            }),
+        }
+    
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show teams owned by the current user
+        self.fields['team_A'].queryset = Team.objects.filter(owner=user)
+        self.fields['team_B'].queryset = Team.objects.filter(owner=user)
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        team_a = cleaned_data.get('team_A')
+        team_b = cleaned_data.get('team_B')
+        
+        if team_a and team_b and team_a == team_b:
+            raise forms.ValidationError('A team cannot play against itself!')
+        
+        return cleaned_data
+
+
+class MatchResultForm(forms.ModelForm):
+    """Form for recording match results"""
+    class Meta:
+        model = Match
+        fields = ['score_a', 'score_b', 'status']
+        widgets = {
+            'score_a': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'placeholder': 'Team A goals'
+            }),
+            'score_b': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'placeholder': 'Team B goals'
+            }),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
 
     

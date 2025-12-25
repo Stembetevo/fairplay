@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ match }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Match Score Card -->
+            <div class="card mb-4 shadow">
+                <div class="card-header {% if match.status == 'Played' %}bg-success{% else %}bg-warning{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">⚽ Match Details</h4>
+                        <span class="badge bg-light text-dark">{{ match.get_status_display }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2>
+                            <strong>{{ match.team_A.name }}</strong>
+                            {% if match.score_a is not None %}
+                                <span class="badge bg-dark" style="font-size: 1.2rem;">
+                                    {{ match.score_a }} - {{ match.score_b }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">vs</span>
+                            {% endif %}
+                            <strong>{{ match.team_B.name }}</strong>
+                        </h2>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>📅 Date:</strong></p>
+                            <p class="text-muted">
+                                {% if match.played_at %}
+                                    {{ match.played_at|date:"M d, Y g:i A" }}
+                                {% else %}
+                                    Not scheduled
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>📍 Location:</strong></p>
+                            <p class="text-muted">{{ match.location|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if can_edit and match.status == 'Scheduled' %}
+                        <div class="mt-3">
+                            <a href="{% url 'match_record_result' match.id %}" class="btn btn-success">Record Result</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Rosters -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">{{ match.team_A.name }} Roster</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if team_a_participations %}
+                                <ul class="list-group">
+                                    {% for participation in team_a_participations %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <strong>{{ participation.player.user.username }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        {{ participation.player.position }} • Rating: {{ participation.player.rating }}
+                                                    </small>
+                                                </div>
+                                                {% if match.status == 'Played' and participation.goals %}
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success">⚽ {{ participation.goals }}</span>
+                                                        {% if participation.assists %}<span class="badge bg-info">🎯 {{ participation.assists }}</span>{% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">No participants recorded.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">{{ match.team_B.name }} Roster</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if team_b_participations %}
+                                <ul class="list-group">
+                                    {% for participation in team_b_participations %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <strong>{{ participation.player.user.username }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        {{ participation.player.position }} • Rating: {{ participation.player.rating }}
+                                                    </small>
+                                                </div>
+                                                {% if match.status == 'Played' and participation.goals %}
+                                                    <div class="text-end">
+                                                        <span class="badge bg-success">⚽ {{ participation.goals }}</span>
+                                                        {% if participation.assists %}<span class="badge bg-info">🎯 {{ participation.assists }}</span>{% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted">No participants recorded.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{% url 'match_list' %}" class="btn btn-secondary">Back to Matches</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
