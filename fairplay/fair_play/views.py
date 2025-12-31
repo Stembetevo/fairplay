@@ -289,8 +289,6 @@ def logout_view(request):
     return redirect('index')
 
 
-# ============= MATCH VIEWS =============
-
 @login_required
 def match_create_view(request):
     """Create/schedule a new match"""
@@ -401,9 +399,6 @@ def match_record_result_view(request, pk):
         'form': form,
         'match': match
     })
-
-
-# ============= HISTORY VIEWS =============
 
 @login_required
 def my_history_view(request):
