@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}My History{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📊 My History</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h5 class="text-muted">Matches Played</h5>
+                    <h2 class="text-primary">{{ stats.total_matches }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h5 class="text-muted">W - D - L</h5>
+                    <h2>
+                        <span class="text-success">{{ stats.wins }}</span> - 
+                        <span class="text-secondary">{{ stats.draws }}</span> - 
+                        <span class="text-danger">{{ stats.losses }}</span>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h5 class="text-muted">Goals</h5>
+                    <h2 class="text-info">{{ stats.goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h5 class="text-muted">Assists</h5>
+                    <h2 class="text-warning">{{ stats.assists }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Team Memberships -->
+    <div class="mb-5">
+        <h4 class="mb-3">👥 Team Memberships</h4>
+        {% if memberships %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Team</th>
+                            <th>Joined</th>
+                            <th>Left</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in memberships %}
+                            <tr>
+                                <td>
+                                    <strong>{{ membership.team.name }}</strong>
+                                    <a href="{% url 'team_history' membership.team.id %}" class="btn btn-sm btn-outline-info ms-2">View History</a>
+                                </td>
+                                <td>{{ membership.joined_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if membership.left_at %}
+                                        {{ membership.left_at|date:"M d, Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if membership.left_at %}
+                                        <span class="badge bg-secondary">Left</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">You haven't joined any teams yet.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Match Participations -->
+    <div>
+        <h4 class="mb-3">⚽ Match History</h4>
+        {% if participations %}
+            <div class="row">
+                {% for participation in participations %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <strong>{{ participation.match.team_A.name }}</strong>
+                                    {% if participation.match.score_a is not None %}
+                                        <span class="badge bg-dark">
+                                            {{ participation.match.score_a }} - {{ participation.match.score_b }}
+                                        </span>
+                                    {% endif %}
+                                    <strong>{{ participation.match.team_B.name }}</strong>
+                                </h6>
+                                
+                                <p class="card-text small text-muted mb-2">
+                                    {% if participation.match.played_at %}
+                                        📅 {{ participation.match.played_at|date:"M d, Y g:i A" }}
+                                    {% else %}
+                                        📅 {{ participation.match.date_created|date:"M d, Y" }}
+                                    {% endif %}
+                                    {% if participation.match.location %}
+                                        <br>📍 {{ participation.match.location }}
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="mb-2">
+                                    <small>
+                                        <strong>Your Team:</strong> {{ participation.team.name }}<br>
+                                        {% if participation.match.status == 'Played' %}
+                                            {% if participation.goals or participation.assists %}
+                                                <span class="badge bg-success">⚽ {{ participation.goals }} Goal{{ participation.goals|pluralize }}</span>
+                                                {% if participation.assists %}<span class="badge bg-info">🎯 {{ participation.assists }} Assist{{ participation.assists|pluralize }}</span>{% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                
+                                <a href="{% url 'match_detail' participation.match.id %}" class="btn btn-sm btn-info">View Match</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">You haven't participated in any matches yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -8,10 +8,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.utils import timezone
 from .models import Player, Team, TeamMembership, Match, MatchParticipation
 from .forms import CustomUserCreationForm
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -163,6 +162,18 @@ def generate_teams_view(request):
             messages.error(request, 'Please provide at least one team name.')
             return redirect('team_form')
         
+        # Automatically add current user as a player if not already in roster
+        user_as_player = Player.objects.filter(owner=request.user, user=request.user).first()
+        if not user_as_player:
+            # Create player for current user with their preferred position
+            user_as_player = Player.objects.create(
+                user=request.user,
+                owner=request.user,
+                position=request.user.profile.preferred_position,
+                rating=70  # Default rating
+            )
+            messages.info(request, f'Added yourself ({request.user.username}) to your roster!')
+        
         #Get the player ids for the snake draft algorithm (only current user's players)
         player_ids = list(Player.objects.filter(owner=request.user).values_list('id', flat=True))
         
@@ -186,12 +197,11 @@ def generate_teams_view(request):
             #Create a team
             team = Team.objects.create(name=team_name, owner=request.user)
 
-            #Add the owner as a member
-            team.members.add(request.user)
-
             for player in players:
                 player.team = team
                 player.save()
+                
+                # Only add the player's user to THIS team's members
                 team.members.add(player.user)
                 
                 # Create new membership record
