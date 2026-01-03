@@ -141,12 +141,3 @@ class MatchParticipation(models.Model):
     class Meta:
         ordering = ['-match__date_created']
         unique_together = ['match', 'player']  # Player can only participate once per match
-class TeamMembership(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='team_members')
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    joined_at = models.DateTimeField(auto_now=True, null=True)
-    left_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class MatchParticipation(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
