@@ -16,10 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from fair_play import views
+from django.http import JsonResponse
+
+def api_root(request):
+    """Root API endpoint"""
+    return JsonResponse({'message': 'FairPlay API', 'status': 'running'})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name='index'),
+    path('', api_root),
     path('', include('fair_play.urls')),
 ]
