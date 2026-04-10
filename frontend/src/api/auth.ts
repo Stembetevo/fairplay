@@ -13,8 +13,17 @@ export interface LoginPayload {
   password: string;
 }
 
+interface AvailableUsersResponse {
+  usernames: string[];
+}
+
 export function getCurrentUser(): Promise<UserSummary | null> {
   return apiRequest<UserSummary | null>("/auth/me");
+}
+
+export async function listAvailableUsernames(): Promise<string[]> {
+  const response = await apiRequest<AvailableUsersResponse>("/auth/users");
+  return response.usernames;
 }
 
 export function registerUser(payload: RegisterPayload): Promise<UserSummary> {

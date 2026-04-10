@@ -51,9 +51,14 @@ export function TeamsPage() {
                 {ownedTeams.map((team) => (
                   <div key={team.id} className="card">
                     <h4>{team.name}</h4>
-                    <p>Players: {team.players.length}</p>
+                    <p>Players: {(team.players ?? []).length}</p>
                     <p>Total Rating: {team.total_rating}</p>
                     <p>Avg Rating: {team.avg_rating.toFixed(1)}</p>
+                    <p>
+                      Squad: {(team.players ?? []).length > 0
+                        ? (team.players ?? []).map((player) => player.username).join(", ")
+                        : "No players assigned"}
+                    </p>
                     <Link to={`/teams/${team.id}/history`}>
                       <button>View History</button>
                     </Link>
@@ -71,9 +76,14 @@ export function TeamsPage() {
                   <div key={team.id} className="card">
                     <h4>{team.name}</h4>
                     <p>Owner: {team.owner_username}</p>
-                    <p>Players: {team.players.length}</p>
+                    <p>Players: {(team.players ?? []).length}</p>
                     <p>Total Rating: {team.total_rating}</p>
                     <p>Avg Rating: {team.avg_rating.toFixed(1)}</p>
+                    <p>
+                      Squad: {(team.players ?? []).length > 0
+                        ? (team.players ?? []).map((player) => player.username).join(", ")
+                        : "No players assigned"}
+                    </p>
                     <Link to={`/teams/${team.id}/history`}>
                       <button>View History</button>
                     </Link>

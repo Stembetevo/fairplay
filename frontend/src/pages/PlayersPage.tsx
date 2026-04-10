@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from "@headlessui/react";
 import {
   listPlayers,
   createPlayer,
@@ -7,12 +15,15 @@ import {
   deletePlayer,
   resetPlayers,
 } from "../api/players";
+import { listAvailableUsernames } from "../api/auth";
 import type { Player, Position } from "../types";
 
 const positions: Position[] = ["Striker", "Defender", "MidFielder", "GoalKeeper"];
 
 export function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [availableUsernames, setAvailableUsernames] = useState<string[]>([]);
+  const [usernameQuery, setUsernameQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -25,8 +36,14 @@ export function PlayersPage() {
   });
 
   useEffect(() => {
-    loadPlayers();
+    void Promise.all([loadPlayers(), loadAvailableUsernames()]);
   }, []);
+
+  const filteredUsernames = usernameQuery
+    ? availableUsernames.filter((username) =>
+        username.toLowerCase().includes(usernameQuery.toLowerCase())
+      )
+    : availableUsernames;
 
   async function loadPlayers() {
     setIsLoading(true);
@@ -41,6 +58,16 @@ export function PlayersPage() {
     }
   }
 
+  async function loadAvailableUsernames() {
+    try {
+      const usernames = await listAvailableUsernames();
+      setAvailableUsernames(usernames);
+    } catch {
+      // Keep player creation usable even if suggestions fail to load.
+      setAvailableUsernames([]);
+    }
+  }
+
   async function handleAddPlayer(event: FormEvent) {
     event.preventDefault();
     try {
@@ -50,8 +77,9 @@ export function PlayersPage() {
         rating: formData.rating,
       });
       setFormData({ username: "", position: "Striker", rating: 70 });
+      setUsernameQuery("");
       setShowAddForm(false);
-      await loadPlayers();
+      await Promise.all([loadPlayers(), loadAvailableUsernames()]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add player");
     }
@@ -104,6 +132,9 @@ export function PlayersPage() {
         <button onClick={() => setShowAddForm(!showAddForm)}>
           {showAddForm ? "Cancel" : "Add Player"}
         </button>
+        <Link to="/teams/generate" className="button-link">
+          Generate Teams
+        </Link>
         {players.length > 0 && (
           <button onClick={handleResetPlayers} className="danger">
             Reset All
@@ -118,11 +149,47 @@ export function PlayersPage() {
           <h3>Add Player</h3>
           <label>
             Username
-            <input
+            <Combobox
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              required
-            />
+              onChange={(value: string | null) => {
+                const nextValue = value ?? "";
+                setFormData({ ...formData, username: nextValue });
+                setUsernameQuery(nextValue);
+              }}
+            >
+              <div className="combobox-field">
+                <ComboboxInput
+                  aria-label="Username"
+                  className="combobox-input"
+                  displayValue={(value: string) => value}
+                  onChange={(event) => {
+                    setUsernameQuery(event.target.value);
+                    setFormData({ ...formData, username: event.target.value });
+                  }}
+                  required
+                />
+                <ComboboxButton className="combobox-button" aria-label="Toggle user list">
+                  v
+                </ComboboxButton>
+              </div>
+              <ComboboxOptions className="combobox-options" anchor="bottom start">
+                {filteredUsernames.length === 0 ? (
+                  <div className="combobox-empty">No matching usernames</div>
+                ) : (
+                  filteredUsernames.map((username) => (
+                    <ComboboxOption
+                      key={username}
+                      value={username}
+                      className={({ focus }) =>
+                        `combobox-option${focus ? " combobox-option-active" : ""}`
+                      }
+                    >
+                      {username}
+                    </ComboboxOption>
+                  ))
+                )}
+              </ComboboxOptions>
+            </Combobox>
           </label>
           <label>
             Position (optional)

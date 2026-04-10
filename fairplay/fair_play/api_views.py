@@ -16,6 +16,12 @@ import random
 class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def users(self, request):
+        owned_user_ids = Player.objects.filter(owner=request.user).values_list('user_id', flat=True)
+        usernames = User.objects.exclude(id__in=owned_user_ids).order_by('username').values_list('username', flat=True)
+        return Response({'usernames': list(usernames)})
+
     @action(detail=False, methods=['get'])
     def me(self, request):
         if not request.user.is_authenticated:
@@ -100,12 +106,28 @@ class TeamViewSet(viewsets.ModelViewSet):
         owned = Team.objects.filter(owner=user)
         member = Team.objects.filter(members=user)
         return (owned | member).distinct()
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        owned_teams = Team.objects.filter(owner=user).distinct()
+        member_teams = Team.objects.filter(members=user).exclude(owner=user).distinct()
+
+        return Response({
+            'owned_teams': TeamSerializer(owned_teams, many=True).data,
+            'member_teams': TeamSerializer(member_teams, many=True).data,
+        })
     
     @action(detail=False, methods=['post'])
     def generate(self, request):
         """Generate balanced teams using snake draft algorithm"""
-        num_teams = request.data.get('num_teams', 2)
-        team_names = request.data.get('team_names', [f'Team {i+1}' for i in range(num_teams)])
+        raw_names = request.data.get('team_names') or request.data.get('names') or []
+        team_names = [str(name).strip() for name in raw_names if str(name).strip()]
+
+        if team_names:
+            num_teams = len(team_names)
+        else:
+            num_teams = int(request.data.get('num_teams', 2))
+            team_names = [f'Team {i+1}' for i in range(num_teams)]
         
         # Get all available players (owned by user)
         players = list(Player.objects.filter(owner=request.user).order_by('-rating'))
