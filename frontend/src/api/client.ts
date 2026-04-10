@@ -54,6 +54,8 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const method = options.method?.toUpperCase() ?? "GET";
   const needsCsrf = method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+  const [basePath, queryString] = path.split("?");
+  const normalizedPath = `${basePath.endsWith("/") ? basePath : `${basePath}/`}${queryString ? `?${queryString}` : ""}`;
 
   if (needsCsrf) {
     await ensureCsrfCookie();
@@ -72,7 +74,7 @@ export async function apiRequest<T>(
     }
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${API_BASE}${normalizedPath}`, {
     ...options,
     headers,
     credentials: "include",

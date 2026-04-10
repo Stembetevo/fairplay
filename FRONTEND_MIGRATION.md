@@ -113,7 +113,6 @@ class TeamSerializer(serializers.ModelSerializer):
 ```
 
 ## Step 3: Create API Views and Endpoints
-
 Create `fairplay/fair_play/api_views.py` with REST API views:
 
 ```python

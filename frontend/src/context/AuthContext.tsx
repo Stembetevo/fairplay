@@ -18,7 +18,6 @@ interface AuthContextValue {
     username: string;
     email: string;
     password1: string;
-    password2: string;
     preferred_position: Position;
   }) => Promise<void>;
   logout: () => Promise<void>;
@@ -59,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username: string;
       email: string;
       password1: string;
-      password2: string;
       preferred_position: Position;
     }) => {
       const me = await registerUser(payload);
@@ -67,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     []
   );
-
   const logout = useCallback(async () => {
     await logoutUser();
     setUser(null);

@@ -92,10 +92,6 @@ class CustomUserCreationForm(UserCreationForm):
             'class': 'form-control',
             'placeholder': 'Password',
         })
-        self.fields['password2'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Confirm password',
-        })
     
     def clean_email(self):
         email = self.cleaned_data.get('email')

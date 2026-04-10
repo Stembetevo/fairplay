@@ -13,7 +13,6 @@ export function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password1, setPassword1] = useState("");
-  const [password2, setPassword2] = useState("");
   const [preferred_position, setPreferredPosition] = useState<Position>("Striker");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +27,6 @@ export function RegisterPage() {
         username,
         email,
         password1,
-        password2,
         preferred_position,
       });
       navigate("/players");
@@ -59,16 +57,6 @@ export function RegisterPage() {
             type="password"
             value={password1}
             onChange={(e) => setPassword1(e.target.value)}
-            required
-          />
-        </label>
-
-        <label>
-          Confirm Password
-          <input
-            type="password"
-            value={password2}
-            onChange={(e) => setPassword2(e.target.value)}
             required
           />
         </label>
